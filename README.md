@@ -6,11 +6,6 @@ Generate predictively prometheus metrics
 
 `./prometheus-generator --counters 10 --gauges 10`
 
-## todo
-
-* histograms
-* summaries
-
 ## kubernetes sample deployment with Datadog autodiscovery
 
 ```yaml

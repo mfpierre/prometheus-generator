@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	addr                     = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
-	gauges                   = flag.Int("gauges", 100, "Number of gauges to generate")
-	counters                 = flag.Int("counters", 100, "Number of counters to generate")
-	httpRequestsResponseTime prometheus.Histogram
+	addr                        = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
+	gauges                      = flag.Int("gauges", 100, "Number of gauges to generate")
+	counters                    = flag.Int("counters", 100, "Number of counters to generate")
+	httpRequestsResponseTime    prometheus.Histogram
+	httpRequestsResponseTimeSum prometheus.Summary
 )
 
 func main() {
@@ -42,10 +43,17 @@ func main() {
 
 	httpRequestsResponseTime = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: "http",
-		Name:      "response_time_seconds",
+		Name:      "response_time_seconds_histogram",
 		Help:      "Request response times",
 	})
 	prometheus.MustRegister(httpRequestsResponseTime)
+
+	httpRequestsResponseTimeSum = prometheus.NewSummary(prometheus.SummaryOpts{
+		Namespace: "http",
+		Name:      "response_time_seconds_summary",
+		Help:      "Request response times",
+	})
+	prometheus.MustRegister(httpRequestsResponseTimeSum)
 
 	// Expose the registered metrics via HTTP.
 	handler := http.NewServeMux()
@@ -61,5 +69,6 @@ func middleware(next http.Handler) http.Handler {
 		// have a better distribution
 		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 		httpRequestsResponseTime.Observe(float64(time.Since(start).Seconds()))
+		httpRequestsResponseTimeSum.Observe(float64(time.Since(start).Seconds()))
 	})
 }
